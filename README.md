@@ -1,2 +1,3 @@
 # DA-DANK-MEEMZ
-Just a fun project I made for fun...
+
+A Discord bot that's all about DA DANK MEEMZ
