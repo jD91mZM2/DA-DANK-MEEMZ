@@ -168,7 +168,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 		buffer = TurTur;
 	} else if msg == "weed"{
 		buffer = Weed;
-	} else if msg == "xfiles"{
+	} else if msg == "illuminati"{
 		buffer = XFiles;
 	} else if msg == "thx"{
 		if s.vc != nil{
