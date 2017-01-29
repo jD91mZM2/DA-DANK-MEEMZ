@@ -136,57 +136,58 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 	}
 
 	var buffer [][]byte = nil;
-	if msg == "john cena"{
-		buffer = JohnCena;
-	} else if msg == "waiting"{
-		buffer = Elevator;
-	} else if msg == "rickroll"{
-		buffer = Rickroll;
-	} else if msg == "cri"{
-		buffer = Cri;
-	} else if msg == "letter"{
-		buffer = Letter;
-	} else if msg == "numbr hat"{
-		buffer = NumberHat;
-	} else if msg == "exotic butters"{
-		buffer = ExoticButters;
-	} else if msg == "damn son"{
-		buffer = DamnSon;
-	} else if msg == "jeff"{
-		buffer = Jeff;
-	} else if msg == "nigga"{
-		buffer = Nigga;
-	} else if msg == "russian singer"{
-		buffer = RussianSinger;
-	} else if msg == "sad violin"{
-		buffer = SadViolin;
-	} else if msg == "shut up"{
-		buffer = ShutUp;
-	} else if msg == "triple"{
-		buffer = Triple;
-	} else if msg == "turtur"{
-		buffer = TurTur;
-	} else if msg == "weed"{
-		buffer = Weed;
-	} else if msg == "illuminati"{
-		buffer = XFiles;
-	} else if msg == "thx"{
-		if s.vc != nil{
-			s.vc.Speaking(false);
-			s.vc.Disconnect();
-			s.playing = false;
-		}
-	} else if msg == "listen only to me plz"{
-		s.commander = author.ID;
-	} else if msg == "every1 owns u stopad robot"{
-		s.commander = "";
-	} else if msg == "cler da chat plz"{
-		messages, _ := session.ChannelMessages(event.ChannelID, 100, "", "");
-		ids := make([]string, 0);
-		for _, message := range messages{
-			ids = append(ids, message.ID);
-		}
-		session.ChannelMessagesBulkDelete(event.ChannelID, ids);
+	switch msg {
+		case "john cena":
+			buffer = JohnCena;
+		case "waiting":
+			buffer = Elevator;
+		case "rickroll":
+			buffer = Rickroll;
+		case "cri":
+			buffer = Cri;
+		case "letter":
+			buffer = Letter;
+		case "numbr hat":
+			buffer = NumberHat;
+		case "exotic butters":
+			buffer = ExoticButters;
+		case "damn son":
+			buffer = DamnSon;
+		case "jeff":
+			buffer = Jeff;
+		case "nigga":
+			buffer = Nigga;
+		case "russian singer":
+			buffer = RussianSinger;
+		case "sad violin":
+			buffer = SadViolin;
+		case "shut up":
+			buffer = ShutUp;
+		case "triple":
+			buffer = Triple;
+		case "turtur":
+			buffer = TurTur;
+		case "weed":
+			buffer = Weed;
+		case "illuminati":
+			buffer = XFiles;
+		case "thx":
+			if s.vc != nil{
+				s.vc.Speaking(false);
+				s.vc.Disconnect();
+				s.playing = false;
+			}
+		case "listen only to me plz":
+			s.commander = author.ID;
+		case "every1 owns u stopad robot":
+			s.commander = "";
+		case "cler da chat plz":
+			messages, _ := session.ChannelMessages(event.ChannelID, 100, "", "");
+			ids := make([]string, 0);
+			for _, message := range messages{
+				ids = append(ids, message.ID);
+			}
+			session.ChannelMessagesBulkDelete(event.ChannelID, ids);
 	}
 
 	if buffer != nil && !s.playing{
