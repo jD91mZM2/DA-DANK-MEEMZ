@@ -106,7 +106,7 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 
 	s.vc.Speaking(true);
 
-	for(_, buf := range buffer){
+	for _, buf := range buffer {
 		if s.vc == nil { return; }
 		s.vc.OpusSend <- buf;
 	}
