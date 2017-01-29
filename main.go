@@ -111,13 +111,14 @@ func load(file string, buffer *[][]byte){
 }
 
 func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s *Settings){
+	s.playing = true;
 	var err error;
 	s.vc, err = session.ChannelVoiceJoin(guild, channel, false, true);
 	if(err != nil){
 		fmt.Fprintln(os.Stderr, "LEL FREGGIN NOOB, ", err);
+		s.playing = false;
 		return;
 	}
-	s.playing = true;
 
 	err = s.vc.Speaking(true);
 	if(err != nil){
