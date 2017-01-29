@@ -89,7 +89,7 @@ func load(file string, buffer *[][]byte){
 	for {
 		err := binary.Read(f, binary.LittleEndian, &length);
 
-		if err == io.EOF || err == io.ErrUnexpectedEOF{
+		if(err == io.EOF || err == io.ErrUnexpectedEOF){
 			return;
 		}
 
@@ -106,7 +106,7 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 
 	s.vc.Speaking(true);
 
-	for _, buf := range buffer{
+	for(_, buf := range buffer){
 		if s.vc == nil { return; }
 		s.vc.OpusSend <- buf;
 	}
@@ -125,7 +125,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 	//member, _ := session.State.Member(guild.ID, author.ID);
 
 	s := settings[guild.ID];
-	if s == nil{
+	if(s == nil){
 		s = &Settings{};
 		settings[guild.ID] = s;
 	}
@@ -136,7 +136,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 	}
 
 	var buffer [][]byte = nil;
-	switch msg {
+	switch(msg){
 		case "john cena":
 			buffer = JohnCena;
 		case "waiting":
@@ -172,7 +172,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 		case "illuminati":
 			buffer = XFiles;
 		case "thx":
-			if s.vc != nil{
+			if(s.vc != nil){
 				s.vc.Speaking(false);
 				s.vc.Disconnect();
 				s.playing = false;
@@ -190,7 +190,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 			session.ChannelMessagesBulkDelete(event.ChannelID, ids);
 	}
 
-	if buffer != nil && !s.playing{
+	if(buffer != nil && !s.playing){
 		for _, state := range guild.VoiceStates{
 			if state.UserID == event.Author.ID{
 				play(buffer, session, guild.ID, state.ChannelID, s);
