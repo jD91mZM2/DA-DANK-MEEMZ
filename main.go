@@ -28,6 +28,7 @@ var Triple = make([][]byte, 0);
 var TurTur = make([][]byte, 0);
 var Weed = make([][]byte, 0);
 var XFiles = make([][]byte, 0);
+var Wam = make([][]byte, 0);
 
 var statuses = []string{
 	"hidden object games",
@@ -74,6 +75,7 @@ func main(){
 	load("turtur", &TurTur);
 	load("weed", &Weed);
 	load("xfiles", &XFiles);
+	load("wam", &Wam);
 
 	fmt.Println("Starting...");
 	d, err := discordgo.New("Bot " + token);
@@ -180,20 +182,21 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 		case "john cena":		buffer = JohnCena;
 		case "waiting":			buffer = Elevator;
 		case "rickroll":		buffer = Rickroll;
-		case "cri":				buffer = Cri;
+		case "cri":			buffer = Cri;
 		case "letter":			buffer = Letter;
 		case "numbr hat":		buffer = NumberHat;
-		case "exotic butters":	buffer = ExoticButters;
+		case "exotic butters":		buffer = ExoticButters;
 		case "damn son":		buffer = DamnSon;
 		case "jeff":			buffer = Jeff;
 		case "nigga":			buffer = Nigga;
-		case "russian singer":	buffer = RussianSinger;
+		case "russian singer":		buffer = RussianSinger;
 		case "sad violin":		buffer = SadViolin;
 		case "shut up":			buffer = ShutUp;
 		case "triple":			buffer = Triple;
 		case "turtur":			buffer = TurTur;
 		case "weed":			buffer = Weed;
 		case "illuminati":		buffer = XFiles;
+		case "wam":			buffer = Wam;
 		case "thx":
 			if(s.vc != nil){
 				err := s.vc.Speaking(false);
