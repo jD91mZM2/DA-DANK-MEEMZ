@@ -55,6 +55,8 @@ func main(){
 	}
 	token := args[0];
 
+	fmt.Println("Loading...");
+
 	load("John Cena", &JohnCena);
 	load("Elevator", &Elevator);
 	load("Rickroll", &Rickroll);
@@ -73,6 +75,7 @@ func main(){
 	load("weed", &Weed);
 	load("xfiles", &XFiles);
 
+	fmt.Println("Starting...");
 	d, err := discordgo.New("Bot " + token);
 	if(err != nil){
 		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR ", err);
@@ -80,7 +83,13 @@ func main(){
 	}
 	d.AddHandler(ready);
 	d.AddHandler(messageCreate);
-	d.Open();
+	err = d.Open();
+
+	if(err != nil){
+		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR ", err);
+		return;
+	}
+	fmt.Println("Started!");
 
 	<-make(chan struct{});
 }
@@ -222,10 +231,9 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 
 func ready(session *discordgo.Session, event *discordgo.Ready){
 	c := time.Tick(time.Second * 5);
-	go func(){
-		for _ = range c{
-			err := session.UpdateStatus(0, statuses[rand.Intn(len(statuses))]);
-			if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
-		}
-	}();
+
+	for _ = range c{
+		err := session.UpdateStatus(0, statuses[rand.Intn(len(statuses))]);
+		if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
+	}
 }
