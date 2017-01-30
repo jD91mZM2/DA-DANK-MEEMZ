@@ -208,16 +208,6 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 			s.commander = author.ID;
 		case "every1 owns u stopad robot":
 			s.commander = "";
-		case "cler da chat plz":
-			messages, err := session.ChannelMessages(event.ChannelID, 100, "", "");
-			if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
-
-			ids := make([]string, 0);
-			for _, message := range messages{
-				ids = append(ids, message.ID);
-			}
-			err = session.ChannelMessagesBulkDelete(event.ChannelID, ids);
-			if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
 	}
 
 	if(buffer != nil && !s.playing){
