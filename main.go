@@ -9,26 +9,15 @@ import (
 	"strings"
 	"time"
 	"math/rand"
+	"io/ioutil"
+	"path/filepath"
 )
 
-var JohnCena = make([][]byte, 0);
-var Elevator = make([][]byte, 0);
-var Rickroll = make([][]byte, 0);
-var Letter = make([][]byte, 0);
-var Cri = make([][]byte, 0);
-var NumberHat = make([][]byte, 0);
-var ExoticButters = make([][]byte, 0);
-var DamnSon = make([][]byte, 0);
-var Jeff = make([][]byte, 0);
-var Nigga = make([][]byte, 0);
-var RussianSinger = make([][]byte, 0);
-var SadViolin = make([][]byte, 0);
-var ShutUp = make([][]byte, 0);
-var Triple = make([][]byte, 0);
-var TurTur = make([][]byte, 0);
-var Weed = make([][]byte, 0);
-var XFiles = make([][]byte, 0);
-var Wam = make([][]byte, 0);
+const DIRNAME = "Dank";
+var sounds = make(map[string][][]byte, 0);
+
+const FEELSBADMAN = "https://openclipart.org/image/2400px/svg_to_png/222252/" +
+"feels.png";
 
 var statuses = []string{
 	"hidden object games",
@@ -58,24 +47,31 @@ func main(){
 
 	fmt.Println("Loading...");
 
-	load("John Cena", &JohnCena);
-	load("Elevator", &Elevator);
-	load("Rickroll", &Rickroll);
-	load("Cri", &Cri);
-	load("Letter", &Letter);
-	load("NumberHat", &NumberHat);
-	load("ExoticButters", &ExoticButters);
-	load("damnson", &DamnSon);
-	load("jeff", &Jeff);
-	load("nigga", &Nigga);
-	load("russianSinger", &RussianSinger);
-	load("sadviolin", &SadViolin);
-	load("shutup", &ShutUp);
-	load("triple", &Triple);
-	load("turtur", &TurTur);
-	load("weed", &Weed);
-	load("xfiles", &XFiles);
-	load("Wam", &Wam);
+	err := os.MkdirAll(DIRNAME, 0755);
+	if(err != nil){
+		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR ", err);
+		return;
+	}
+	files, err := ioutil.ReadDir(DIRNAME);
+	if(err != nil){
+		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR ", err);
+		return;
+	}
+	for _, file := range files{
+		if(file.IsDir()){
+			continue;
+		}
+		name := file.Name();
+		if(!strings.HasSuffix(name, ".dca")){
+			continue;
+		}
+
+		bytes := make([][]byte, 0);
+		load(name, &bytes);
+		
+		name = strings.ToLower(strings.TrimSuffix(name, ".dca"));
+		sounds[name] = bytes;
+	}
 
 	fmt.Println("Starting...");
 	d, err := discordgo.New("Bot " + token);
@@ -97,7 +93,7 @@ func main(){
 }
 
 func load(file string, buffer *[][]byte){
-	f, err := os.Open("Dank/" + file + ".dca");
+	f, err := os.Open(filepath.Join(DIRNAME, file));
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "FILE WAS WEIRD IDK: ", err);
 		return;
@@ -157,6 +153,12 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 }
 
 func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
+	message(session, event.Message)
+}
+func messageUpdate(session *discordgo.Session, event *discordgo.MessageUpdate){
+	message(session, event.Message)
+}
+func message(session *discordgo.Session, event *discordgo.Message){
 	msg := strings.ToLower(strings.TrimSpace(event.Content));
 	author := event.Author;
 
@@ -165,7 +167,6 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 
 	guild, err := session.State.Guild(channel.GuildID);
 	if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
-	//member, err := session.State.Member(guild.ID, author.ID);
 
 	s := settings[guild.ID];
 	if(s == nil){
@@ -177,43 +178,41 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
 		return;
 	}
 
+	var image string = "";
 	var buffer [][]byte = nil;
-	switch(msg){
-		case "john cena":		buffer = JohnCena;
-		case "waiting":			buffer = Elevator;
-		case "rickroll":		buffer = Rickroll;
-		case "cri":				buffer = Cri;
-		case "letter":			buffer = Letter;
-		case "numbr hat":		buffer = NumberHat;
-		case "exotic butters":	buffer = ExoticButters;
-		case "damn son":		buffer = DamnSon;
-		case "jeff":			buffer = Jeff;
-		case "nigga":			buffer = Nigga;
-		case "russian singer":	buffer = RussianSinger;
-		case "sad violin":		buffer = SadViolin;
-		case "shut up":			buffer = ShutUp;
-		case "triple":			buffer = Triple;
-		case "turtur":			buffer = TurTur;
-		case "weed":			buffer = Weed;
-		case "illuminati":		buffer = XFiles;
-		case "wam":				buffer = Wam;
-		case "thx":
-			if(s.vc != nil){
-				err := s.vc.Speaking(false);
-				if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
 
-				err = s.vc.Disconnect();
-				if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
+	buffer2, ok := sounds[msg];
+	if(ok){
+		buffer = buffer2;
+	} else {
+		switch(msg){
+			case "feelsbadman":
+				image = FEELSBADMAN;
+			case "thx":
+				if(s.vc != nil){
+					err := s.vc.Speaking(false);
+					if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
 
-				s.playing = false;
-			}
-		case "listen only to me plz":
-			s.commander = author.ID;
-		case "every1 owns u stopad robot":
-			s.commander = "";
+					err = s.vc.Disconnect();
+					if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
+
+					s.playing = false;
+				}
+			case "listen only to me plz":
+				s.commander = author.ID;
+			case "every1 owns u stopad robot":
+				s.commander = "";
+		}
 	}
 
-	if(buffer != nil && !s.playing){
+	if(image != ""){
+		_, err = session.ChannelMessageSendEmbed(event.ChannelID,
+		&discordgo.MessageEmbed{
+			Image: &discordgo.MessageEmbedImage{
+				URL: image,
+			},
+		});
+	} else if(buffer != nil && !s.playing){
 		for _, state := range guild.VoiceStates{
 			if state.UserID == event.Author.ID{
 				play(buffer, session, guild.ID, state.ChannelID, s);
