@@ -81,6 +81,7 @@ func main(){
 	}
 	d.AddHandler(ready);
 	d.AddHandler(messageCreate);
+	d.AddHandler(messageUpdate);
 	err = d.Open();
 
 	if(err != nil){
