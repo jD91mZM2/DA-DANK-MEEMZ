@@ -11,13 +11,12 @@ import (
 	"math/rand"
 	"io/ioutil"
 	"path/filepath"
+	"encoding/json"
 )
 
 const DIRNAME = "Dank";
 var sounds = make(map[string][][]byte, 0);
-
-const FEELSBADMAN = "https://openclipart.org/image/2400px/svg_to_png/222252/" +
-"feels.png";
+var images map[string]string;
 
 var statuses = []string{
 	"hidden object games",
@@ -67,10 +66,25 @@ func main(){
 		}
 
 		bytes := make([][]byte, 0);
-		load(name, &bytes);
+		err = load(name, &bytes);
+		if(err != nil){
+			continue;
+		}
 		
 		name = strings.ToLower(strings.TrimSuffix(name, ".dca"));
 		sounds[name] = bytes;
+	}
+
+	data, err := ioutil.ReadFile("Dank/images.json");
+	if(err != nil){
+		fmt.Fprintln(os.Stderr, "DAT images.json FILE EZ POOF!", err);
+		images = make(map[string]string, 0);
+	} else {
+		err = json.Unmarshal(data, &images);
+		if(err != nil){
+			fmt.Fprintln(os.Stderr, "DO U EVEN JSON, BRUH?", err);
+			images = make(map[string]string, 0);
+		}
 	}
 
 	fmt.Println("Starting...");
@@ -93,11 +107,11 @@ func main(){
 	<-make(chan struct{});
 }
 
-func load(file string, buffer *[][]byte){
+func load(file string, buffer *[][]byte) error{
 	f, err := os.Open(filepath.Join(DIRNAME, file));
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "FILE WAS WEIRD IDK: ", err);
-		return;
+		return err;
 	}
 
 	var length int16;
@@ -105,17 +119,22 @@ func load(file string, buffer *[][]byte){
 		err := binary.Read(f, binary.LittleEndian, &length);
 
 		if(err == io.EOF || err == io.ErrUnexpectedEOF){
-			return;
-		} else if(err != nil) {
+			break;
+		} else if(err != nil){
 			fmt.Fprintln(os.Stderr, "IDK WAT U DID BUT WEL DONN NOOB, ", err);
-			return;
+			return err;
 		}
 
 		buf := make([]byte, length);
-		binary.Read(f, binary.LittleEndian, &buf);
+		err = binary.Read(f, binary.LittleEndian, &buf);
+		if(err != nil){
+			fmt.Fprintln(os.Stderr, "IDK WAT U DID BUT WEL DONN NOOB, ", err);
+			return err;
+		}
 
 		*buffer = append(*buffer, buf);
 	}
+	return nil;
 }
 
 func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s *Settings){
@@ -179,46 +198,45 @@ func message(session *discordgo.Session, event *discordgo.Message){
 		return;
 	}
 
-	var image string = "";
-	var buffer [][]byte = nil;
-
-	buffer2, ok := sounds[msg];
+	buffer, ok := sounds[msg];
 	if(ok){
-		buffer = buffer2;
-	} else {
-		switch(msg){
-			case "feelsbadman":
-				image = FEELSBADMAN;
-			case "thx":
-				if(s.vc != nil){
-					err := s.vc.Speaking(false);
-					if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
-
-					err = s.vc.Disconnect();
-					if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
-
-					s.playing = false;
+		if(!s.playing){
+			for _, state := range guild.VoiceStates{
+				if state.UserID == event.Author.ID{
+					play(buffer, session, guild.ID, state.ChannelID, s);
 				}
-			case "listen only to me plz":
-				s.commander = author.ID;
-			case "every1 owns u stopad robot":
-				s.commander = "";
+			}
+		}
+		return;
+	}
+
+	for keyword, url := range images{
+		if(strings.Contains(msg, strings.ToLower(keyword))){
+			_, err = session.ChannelMessageSendEmbed(event.ChannelID,
+				&discordgo.MessageEmbed{
+					Image: &discordgo.MessageEmbedImage{
+						URL: url,
+					},
+				});
+			break;
 		}
 	}
 
-	if(image != ""){
-		_, err = session.ChannelMessageSendEmbed(event.ChannelID,
-		&discordgo.MessageEmbed{
-			Image: &discordgo.MessageEmbedImage{
-				URL: image,
-			},
-		});
-	} else if(buffer != nil && !s.playing){
-		for _, state := range guild.VoiceStates{
-			if state.UserID == event.Author.ID{
-				play(buffer, session, guild.ID, state.ChannelID, s);
+	switch(msg){
+		case "thx":
+			if(s.vc != nil){
+				err := s.vc.Speaking(false);
+				if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
+
+				err = s.vc.Disconnect();
+				if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
+
+				s.playing = false;
 			}
-		}
+		case "listen only to me plz":
+			s.commander = author.ID;
+		case "every1 owns u stopad robot":
+			s.commander = "";
 	}
 }
 
