@@ -151,6 +151,7 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 	if(err != nil){
 		fmt.Fprintln(os.Stderr, "I HAS TO TYPE ALL DESE ERROR MESSAGES " +
 		"HAVE SOME SYMPATHY PLS", err);
+		s.playing = false;
 		return;
 	}
 
@@ -162,12 +163,10 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 	err = s.vc.Speaking(false);
 	if(err != nil){
 		fmt.Fprintln(os.Stderr, err);
-		return;
 	}
 	err = s.vc.Disconnect();
 	if(err != nil){
 		fmt.Fprintln(os.Stderr, err);
-		return;
 	}
 	s.playing = false;
 }
@@ -203,8 +202,8 @@ func message(session *discordgo.Session, event *discordgo.Message){
 		if(!s.playing){
 			for _, state := range guild.VoiceStates{
 				if state.UserID == event.Author.ID{
+					go react(session, event);
 					play(buffer, session, guild.ID, state.ChannelID, s);
-					react(session, event);
 					return;
 				}
 			}
@@ -214,13 +213,13 @@ func message(session *discordgo.Session, event *discordgo.Message){
 
 	for keyword, url := range images{
 		if(strings.Contains(msg, strings.ToLower(keyword))){
+			go react(session, event);
 			_, err = session.ChannelMessageSendEmbed(event.ChannelID,
 				&discordgo.MessageEmbed{
 					Image: &discordgo.MessageEmbedImage{
 						URL: url,
 					},
 				});
-			react(session, event);
 			return;
 		}
 	}
