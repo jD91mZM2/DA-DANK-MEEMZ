@@ -226,12 +226,12 @@ func message(session *discordgo.Session, event *discordgo.Message){
 
 	switch(msg){
 		case "thx":
-			if(s.vc != nil){
+			if(s.vc != nil && s.playing){
 				err := s.vc.Speaking(false);
-				if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
+				if(err != nil){ fmt.Fprintln(os.Stderr, err); }
 
 				err = s.vc.Disconnect();
-				if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
+				if(err != nil){ fmt.Fprintln(os.Stderr, err); }
 
 				s.playing = false;
 			}
