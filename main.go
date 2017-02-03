@@ -1,4 +1,4 @@
-package main
+package main;
 
 import (
 	"os"
@@ -48,12 +48,12 @@ func main(){
 
 	err := os.MkdirAll(DIRNAME, 0755);
 	if(err != nil){
-		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR ", err);
+		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR", err);
 		return;
 	}
 	files, err := ioutil.ReadDir(DIRNAME);
 	if(err != nil){
-		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR ", err);
+		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR", err);
 		return;
 	}
 	for _, file := range files{
@@ -90,7 +90,7 @@ func main(){
 	fmt.Println("Starting...");
 	d, err := discordgo.New("Bot " + token);
 	if(err != nil){
-		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR ", err);
+		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR", err);
 		return;
 	}
 	d.AddHandler(ready);
@@ -99,7 +99,7 @@ func main(){
 	err = d.Open();
 
 	if(err != nil){
-		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR ", err);
+		fmt.Fprintln(os.Stderr, "I THINK THERE WAS ERROR", err);
 		return;
 	}
 	fmt.Println("Started!");
@@ -110,7 +110,7 @@ func main(){
 func load(file string, buffer *[][]byte) error{
 	f, err := os.Open(filepath.Join(DIRNAME, file));
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "FILE WAS WEIRD IDK: ", err);
+		fmt.Fprintln(os.Stderr, "FILE WAS WEIRD IDK:", err);
 		return err;
 	}
 
@@ -121,14 +121,14 @@ func load(file string, buffer *[][]byte) error{
 		if(err == io.EOF || err == io.ErrUnexpectedEOF){
 			break;
 		} else if(err != nil){
-			fmt.Fprintln(os.Stderr, "IDK WAT U DID BUT WEL DONN NOOB, ", err);
+			fmt.Fprintln(os.Stderr, "IDK WAT U DID BUT WEL DONN NOOB,", err);
 			return err;
 		}
 
 		buf := make([]byte, length);
 		err = binary.Read(f, binary.LittleEndian, &buf);
 		if(err != nil){
-			fmt.Fprintln(os.Stderr, "IDK WAT U DID BUT WEL DONN NOOB, ", err);
+			fmt.Fprintln(os.Stderr, "IDK WAT U DID BUT WEL DONN NOOB,", err);
 			return err;
 		}
 
@@ -142,7 +142,7 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 	var err error;
 	s.vc, err = session.ChannelVoiceJoin(guild, channel, false, true);
 	if(err != nil){
-		fmt.Fprintln(os.Stderr, "LEL FREGGIN NOOB, ", err);
+		fmt.Fprintln(os.Stderr, "LEL FREGGIN NOOB,", err);
 		s.playing = false;
 		return;
 	}
@@ -150,7 +150,7 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 	err = s.vc.Speaking(true);
 	if(err != nil){
 		fmt.Fprintln(os.Stderr, "I HAS TO TYPE ALL DESE ERROR MESSAGES " +
-		"HAVE SOME SYMPATHY PLS ", err);
+		"HAVE SOME SYMPATHY PLS", err);
 		return;
 	}
 
@@ -204,6 +204,8 @@ func message(session *discordgo.Session, event *discordgo.Message){
 			for _, state := range guild.VoiceStates{
 				if state.UserID == event.Author.ID{
 					play(buffer, session, guild.ID, state.ChannelID, s);
+					react(session, event);
+					return;
 				}
 			}
 		}
@@ -218,7 +220,8 @@ func message(session *discordgo.Session, event *discordgo.Message){
 						URL: url,
 					},
 				});
-			break;
+			react(session, event);
+			return;
 		}
 	}
 
@@ -246,5 +249,17 @@ func ready(session *discordgo.Session, event *discordgo.Ready){
 	for _ = range c{
 		err := session.UpdateStatus(0, statuses[rand.Intn(len(statuses))]);
 		if(err != nil){ fmt.Fprintln(os.Stderr, err); return; }
+	}
+}
+
+func react(session *discordgo.Session, event *discordgo.Message){
+	err := session.MessageReactionAdd(event.ChannelID, event.ID, "👌");
+	if(err != nil){
+		fmt.Fprintln(os.Stderr, "Couldn't react,", err);
+		return;
+	}
+	err = session.MessageReactionAdd(event.ChannelID, event.ID, "😂");
+	if(err != nil){
+		fmt.Fprintln(os.Stderr, "Couldn't react,", err);
 	}
 }
