@@ -224,6 +224,9 @@ func message(session *discordgo.Session, event *discordgo.Message){
 						URL: url,
 					},
 				});
+			if(err != nil){
+				printErr(err);
+			}
 			return;
 		}
 	}
