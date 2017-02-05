@@ -90,20 +90,28 @@ func main(){
 	}
 
 	fmt.Println("Starting...");
-	d, err := discordgo.New("Bot " + token);
+	session, err := discordgo.New("Bot " + token);
 	if(err != nil){
 		printErr(err);
 		return;
 	}
-	d.AddHandler(ready);
-	d.AddHandler(messageCreate);
-	d.AddHandler(messageUpdate);
-	err = d.Open();
+	session.AddHandler(messageCreate);
+	session.AddHandler(messageUpdate);
+	err = session.Open();
 
 	if(err != nil){
 		printErr(err);
 		return;
 	}
+
+	go func(){
+		c := time.Tick(time.Second * 5);
+
+		for _ = range c{
+			err := session.UpdateStatus(0, statuses[rand.Intn(len(statuses))]);
+			if(err != nil){ printErr(err); return; }
+		}
+	}();
 	fmt.Println("Started!");
 
 	<-make(chan struct{});
@@ -258,15 +266,6 @@ func message(session *discordgo.Session, event *discordgo.Message){
 			s.commander = author.ID;
 		case "every1 owns u stopad robot":
 			s.commander = "";
-	}
-}
-
-func ready(session *discordgo.Session, event *discordgo.Ready){
-	c := time.Tick(time.Second * 5);
-
-	for _ = range c{
-		err := session.UpdateStatus(0, statuses[rand.Intn(len(statuses))]);
-		if(err != nil){ printErr(err); return; }
 	}
 }
 
