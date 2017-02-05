@@ -178,6 +178,7 @@ func messageUpdate(session *discordgo.Session, event *discordgo.MessageUpdate){
 	message(session, event.Message)
 }
 func message(session *discordgo.Session, event *discordgo.Message){
+	if(event.Author == nil){ return; }
 	msg := strings.ToLower(strings.TrimSpace(event.Content));
 	author := event.Author;
 
