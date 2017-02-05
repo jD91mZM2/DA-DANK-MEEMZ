@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"encoding/json"
 	"runtime/debug"
+	"regexp"
 )
 
 const DIRNAME = "Dank";
@@ -181,6 +182,10 @@ func message(session *discordgo.Session, event *discordgo.Message){
 	if(event.Author == nil){ return; }
 	msg := strings.ToLower(strings.TrimSpace(event.Content));
 	author := event.Author;
+	
+	if(msg == ""){
+		return;
+	}
 
 	channel, err := session.State.Channel(event.ChannelID);
 	if(err != nil){ printErr(err); return; }
@@ -217,7 +222,13 @@ func message(session *discordgo.Session, event *discordgo.Message){
 	}
 
 	for keyword, url := range images{
-		if(strings.Contains(msg, strings.ToLower(keyword))){
+		contains, err := regexp.MatchString("(?i)\\b" +
+			regexp.QuoteMeta(keyword) + "\\b", msg);
+		if(err != nil){
+			printErr(err);
+			return;
+		}
+		if(contains){
 			go react(session, event);
 			_, err = session.ChannelMessageSendEmbed(event.ChannelID,
 				&discordgo.MessageEmbed{
