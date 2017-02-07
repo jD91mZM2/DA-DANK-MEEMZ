@@ -31,7 +31,6 @@ var statuses = []string{
 	"dead"}
 
 type Settings struct{
-	vc *discordgo.VoiceConnection
 	playing bool
 	commander string
 }
@@ -150,15 +149,14 @@ func load(file string, buffer *[][]byte) error{
 
 func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s *Settings){
 	s.playing = true;
-	var err error;
-	s.vc, err = session.ChannelVoiceJoin(guild, channel, false, true);
+	vc, err := session.ChannelVoiceJoin(guild, channel, false, true);
 	if(err != nil){
 		printErr(err);
 		s.playing = false;
 		return;
 	}
 
-	err = s.vc.Speaking(true);
+	err = vc.Speaking(true);
 	if(err != nil){
 		printErr(err);
 		s.playing = false;
@@ -166,15 +164,15 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 	}
 
 	for _, buf := range buffer {
-		if s.vc == nil { return; }
-		s.vc.OpusSend <- buf;
+		if(!s.playing){ break; }
+		vc.OpusSend <- buf;
 	}
 
-	err = s.vc.Speaking(false);
+	err = vc.Speaking(false);
 	if(err != nil){
 		printErr(err);
 	}
-	err = s.vc.Disconnect();
+	err = vc.Disconnect();
 	if(err != nil){
 		printErr(err);
 	}
@@ -254,15 +252,7 @@ func message(session *discordgo.Session, event *discordgo.Message){
 
 	switch(msg){
 		case "thx":
-			if(s.vc != nil && s.playing){
-				err := s.vc.Speaking(false);
-				if(err != nil){ printErr(err); }
-
-				err = s.vc.Disconnect();
-				if(err != nil){ printErr(err); }
-
-				s.playing = false;
-			}
+			s.playing = false;
 		case "listen only to me plz":
 			s.commander = author.ID;
 		case "every1 owns u stopad robot":
