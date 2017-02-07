@@ -119,6 +119,7 @@ func main(){
 
 func load(file string, buffer *[][]byte) error{
 	f, err := os.Open(filepath.Join(DIRNAME, file));
+	defer f.Close();
 	if err != nil {
 		printErr(err);
 		return err;
