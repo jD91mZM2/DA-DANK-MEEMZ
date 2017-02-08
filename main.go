@@ -194,14 +194,14 @@ func message(session *discordgo.Session, event *discordgo.Message){
 		return;
 	}
 
-	channel, err := session.State.Channel(event.ChannelID);
+	channel, err := session.Channel(event.ChannelID);
 	if(err != nil){ printErr(err); return; }
 
 	if(channel.IsPrivate){
 		return;
 	}
 
-	guild, err := session.State.Guild(channel.GuildID);
+	guild, err := session.Guild(channel.GuildID);
 	if(err != nil){ printErr(err); return; }
 
 	s := settings[guild.ID];
