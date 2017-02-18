@@ -98,7 +98,7 @@ func main(){
 			});
 		}
 		sort.Slice(images, func(i, j int) bool{
-			return len(images[i].Image) > len(images[j].Image);
+			return len(images[i].Keyword) > len(images[j].Keyword);
 		});
 		if(err != nil){
 			stdutil.PrintErr("", err);
