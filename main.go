@@ -14,11 +14,17 @@ import (
 	"encoding/json"
 	"regexp"
 	"github.com/legolord208/stdutil"
+	"sort"
 )
+
+type Image struct{
+	Keyword string
+	Image string
+}
 
 const DIRNAME = "Dank";
 var sounds = make(map[string][][]byte, 0);
-var images map[string]string;
+var images []*Image;
 
 var statuses = []string{
 	"hidden object games",
@@ -73,7 +79,7 @@ func main(){
 		if(err != nil){
 			continue;
 		}
-		
+
 		name = strings.ToLower(strings.TrimSuffix(name, ".dca"));
 		sounds[name] = bytes;
 	}
@@ -81,12 +87,21 @@ func main(){
 	data, err := ioutil.ReadFile("Dank/images.json");
 	if(err != nil){
 		stdutil.PrintErr("", err);
-		images = make(map[string]string, 0);
 	} else {
-		err = json.Unmarshal(data, &images);
+		var imagesMap map[string]string;
+		err = json.Unmarshal(data, &imagesMap);
+
+		for key, val := range imagesMap{
+			images = append(images, &Image{
+				Keyword: key,
+				Image: val,
+			});
+		}
+		sort.Slice(images, func(i, j int) bool{
+			return len(images[i].Image) > len(images[j].Image);
+		});
 		if(err != nil){
 			stdutil.PrintErr("", err);
-			images = make(map[string]string, 0);
 		}
 	}
 
@@ -191,7 +206,7 @@ func message(session *discordgo.Session, event *discordgo.Message){
 	if(event.Author == nil){ return; }
 	msg := strings.ToLower(strings.TrimSpace(event.Content));
 	author := event.Author;
-	
+
 	if(msg == ""){
 		return;
 	}
@@ -230,9 +245,8 @@ func message(session *discordgo.Session, event *discordgo.Message){
 		return;
 	}
 
-	for keyword, url := range images{
-		contains, err := regexp.MatchString("(?i)\\b" +
-			regexp.QuoteMeta(keyword) + "\\b", msg);
+	for _, image := range images{
+		contains, err := regexp.MatchString("(?i)\\b" + regexp.QuoteMeta(image.Keyword) + "\\b", msg);
 		if(err != nil){
 			stdutil.PrintErr("", err);
 			return;
@@ -242,7 +256,7 @@ func message(session *discordgo.Session, event *discordgo.Message){
 			_, err = session.ChannelMessageSendEmbed(event.ChannelID,
 				&discordgo.MessageEmbed{
 					Image: &discordgo.MessageEmbedImage{
-						URL: url,
+						URL: image.Image,
 					},
 				});
 			if(err != nil){
