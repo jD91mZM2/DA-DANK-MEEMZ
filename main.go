@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"github.com/legolord208/stdutil"
 	"sort"
+	"os/signal"
 )
 
 type Image struct{
@@ -130,7 +131,12 @@ func main(){
 	}();
 	fmt.Println("Started!");
 
-	<-make(chan struct{});
+	interrupt := make(chan os.Signal);
+	signal.Notify(interrupt, os.Interrupt);
+
+	<-interrupt;
+	fmt.Println("\nExiting");
+	session.Close();
 }
 
 func load(file string, buffer *[][]byte) error{
