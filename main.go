@@ -131,7 +131,7 @@ func main(){
 	}();
 	fmt.Println("Started!");
 
-	interrupt := make(chan os.Signal);
+	interrupt := make(chan os.Signal, 1);
 	signal.Notify(interrupt, os.Interrupt);
 
 	<-interrupt;
