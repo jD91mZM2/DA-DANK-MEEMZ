@@ -16,6 +16,7 @@ import (
 	"github.com/legolord208/stdutil"
 	"sort"
 	"os/signal"
+	"syscall"
 )
 
 type Image struct{
@@ -131,8 +132,8 @@ func main(){
 	}();
 	fmt.Println("Started!");
 
-	interrupt := make(chan os.Signal, 1);
-	signal.Notify(interrupt, os.Interrupt);
+	interrupt := make(chan os.Signal, 2);
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM);
 
 	<-interrupt;
 	fmt.Println("\nExiting");
