@@ -278,8 +278,43 @@ func message(session *discordgo.Session, event *discordgo.Message){
 			s.playing = false;
 		case "listen only to me plz":
 			s.commander = author.ID;
+			fmt.Println("In guild '" + guild.Name + "', the user '" + author.Username + "' took control.");
 		case "every1 owns u stopad robot":
 			s.commander = "";
+		case "plz list da stuff":
+			strSounds := "";
+			for name := range sounds{
+				if(strSounds != ""){
+					strSounds += ", ";
+				}
+				strSounds += "`" + name + "`";
+			}
+
+			strImages := "";
+			for _, image := range images{
+				if(strImages != ""){
+					strImages += ", ";
+				}
+				strImages += "`" + image.Keyword + "`";
+			}
+
+			_, err := session.ChannelMessageSendEmbed(event.ChannelID, &discordgo.MessageEmbed{
+				Fields: []*discordgo.MessageEmbedField{
+					&discordgo.MessageEmbedField{
+						Name: "DA SOUNDZ",
+						Value: strSounds,
+					},
+					&discordgo.MessageEmbedField{
+						Name: "DA IMAGEZ",
+						Value: strImages,
+						Inline: true,
+					},
+				},
+			});
+			if(err != nil){
+				stdutil.PrintErr("", err);
+				return;
+			}
 	}
 }
 
