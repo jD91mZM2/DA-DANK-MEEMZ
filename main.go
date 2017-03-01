@@ -183,6 +183,11 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 	err = vc.Speaking(true);
 	if(err != nil){
 		stdutil.PrintErr("", err);
+
+		err = vc.Disconnect();
+		if(err != nil){
+			stdutil.PrintErr("", err);
+		}
 		return;
 	}
 
