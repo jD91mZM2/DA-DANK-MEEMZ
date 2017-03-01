@@ -173,17 +173,16 @@ func load(file string, buffer *[][]byte) error{
 
 func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s *Settings){
 	s.playing = true;
+	defer func(){ s.playing = false; }();
 	vc, err := session.ChannelVoiceJoin(guild, channel, false, true);
 	if(err != nil){
 		stdutil.PrintErr("", err);
-		s.playing = false;
 		return;
 	}
 
 	err = vc.Speaking(true);
 	if(err != nil){
 		stdutil.PrintErr("", err);
-		s.playing = false;
 		return;
 	}
 
@@ -200,7 +199,6 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 	if(err != nil){
 		stdutil.PrintErr("", err);
 	}
-	s.playing = false;
 }
 
 func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
