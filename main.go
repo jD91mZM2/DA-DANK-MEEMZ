@@ -45,8 +45,7 @@ type Settings struct{
 var settings = make(map[string]*Settings);
 
 func main(){
-	stdutil.ShouldTrace = true;
-
+	//stdutil.ShouldTrace = true;
 	args := os.Args[1:];
 
 	if(len(args) < 1){
