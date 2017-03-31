@@ -1,32 +1,33 @@
-package main;
+package main
 
 import (
-	"os"
+	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"encoding/binary"
-	"io"
-	"strings"
-	"time"
-	"math/rand"
-	"io/ioutil"
-	"path/filepath"
-	"encoding/json"
-	"regexp"
 	"github.com/legolord208/stdutil"
-	"sort"
+	"io"
+	"io/ioutil"
+	"math/rand"
+	"os"
 	"os/signal"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
 	"syscall"
+	"time"
 )
 
-type Image struct{
+type Image struct {
 	Keyword string
-	Image string
+	Image   string
 }
 
-const DIRNAME = "Dank";
-var sounds = make(map[string][][]byte, 0);
-var images []*Image;
+const DIRNAME = "Dank"
+
+var sounds = make(map[string][][]byte, 0)
+var images []*Image
 
 var statuses = []string{
 	"hidden object games",
@@ -38,296 +39,310 @@ var statuses = []string{
 	"bored",
 	"dead"}
 
-type Settings struct{
-	playing bool
+type Settings struct {
+	playing   bool
 	commander string
 }
-var settings = make(map[string]*Settings);
 
-func main(){
+var settings = make(map[string]*Settings)
+
+func main() {
 	//stdutil.ShouldTrace = true;
-	args := os.Args[1:];
+	args := os.Args[1:]
 
-	if(len(args) < 1){
-		fmt.Println("No token provided!");
-		return;
+	if len(args) < 1 {
+		fmt.Println("No token provided!")
+		return
 	}
-	token := args[0];
+	token := args[0]
 
-	fmt.Println("Loading...");
+	fmt.Println("Loading...")
 
-	err := os.MkdirAll(DIRNAME, 0755);
-	if(err != nil){
-		stdutil.PrintErr("", err);
-		return;
+	err := os.MkdirAll(DIRNAME, 0755)
+	if err != nil {
+		stdutil.PrintErr("", err)
+		return
 	}
-	files, err := ioutil.ReadDir(DIRNAME);
-	if(err != nil){
-		stdutil.PrintErr("", err);
-		return;
+	files, err := ioutil.ReadDir(DIRNAME)
+	if err != nil {
+		stdutil.PrintErr("", err)
+		return
 	}
-	for _, file := range files{
-		if(file.IsDir()){
-			continue;
+	for _, file := range files {
+		if file.IsDir() {
+			continue
 		}
-		name := file.Name();
-		if(!strings.HasSuffix(name, ".dca")){
-			continue;
-		}
-
-		bytes := make([][]byte, 0);
-		err = load(name, &bytes);
-		if(err != nil){
-			continue;
+		name := file.Name()
+		if !strings.HasSuffix(name, ".dca") {
+			continue
 		}
 
-		name = strings.ToLower(strings.TrimSuffix(name, ".dca"));
-		sounds[name] = bytes;
+		bytes := make([][]byte, 0)
+		err = load(name, &bytes)
+		if err != nil {
+			continue
+		}
+
+		name = strings.ToLower(strings.TrimSuffix(name, ".dca"))
+		sounds[name] = bytes
 	}
 
-	data, err := ioutil.ReadFile("Dank/images.json");
-	if(err != nil){
-		stdutil.PrintErr("", err);
+	data, err := ioutil.ReadFile("Dank/images.json")
+	if err != nil {
+		stdutil.PrintErr("", err)
 	} else {
-		var imagesMap map[string]string;
-		err = json.Unmarshal(data, &imagesMap);
+		var imagesMap map[string]string
+		err = json.Unmarshal(data, &imagesMap)
 
-		for key, val := range imagesMap{
+		for key, val := range imagesMap {
 			images = append(images, &Image{
 				Keyword: key,
-				Image: val,
-			});
+				Image:   val,
+			})
 		}
-		sort.Slice(images, func(i, j int) bool{
-			return len(images[i].Keyword) > len(images[j].Keyword);
-		});
-		if(err != nil){
-			stdutil.PrintErr("", err);
+		sort.Slice(images, func(i, j int) bool {
+			return len(images[i].Keyword) > len(images[j].Keyword)
+		})
+		if err != nil {
+			stdutil.PrintErr("", err)
 		}
 	}
 
-	fmt.Println("Starting...");
-	session, err := discordgo.New("Bot " + token);
-	if(err != nil){
-		stdutil.PrintErr("", err);
-		return;
-	}
-	session.AddHandler(messageCreate);
-	session.AddHandler(messageUpdate);
-	err = session.Open();
-
-	if(err != nil){
-		stdutil.PrintErr("", err);
-		return;
-	}
-
-	go func(){
-		c := time.Tick(time.Second * 5);
-
-		for _ = range c{
-			err := session.UpdateStatus(0, statuses[rand.Intn(len(statuses))]);
-			if(err != nil){ stdutil.PrintErr("", err); return; }
-		}
-	}();
-	fmt.Println("Started!");
-
-	interrupt := make(chan os.Signal, 2);
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM);
-
-	<-interrupt;
-	fmt.Println("\nExiting");
-	session.Close();
-}
-
-func load(file string, buffer *[][]byte) error{
-	f, err := os.Open(filepath.Join(DIRNAME, file));
-	defer f.Close();
+	fmt.Println("Starting...")
+	session, err := discordgo.New("Bot " + token)
 	if err != nil {
-		stdutil.PrintErr("", err);
-		return err;
+		stdutil.PrintErr("", err)
+		return
+	}
+	session.AddHandler(messageCreate)
+	session.AddHandler(messageUpdate)
+	err = session.Open()
+
+	if err != nil {
+		stdutil.PrintErr("", err)
+		return
 	}
 
-	var length int16;
-	for {
-		err := binary.Read(f, binary.LittleEndian, &length);
+	go func() {
+		c := time.Tick(time.Second * 5)
 
-		if(err == io.EOF || err == io.ErrUnexpectedEOF){
-			break;
-		} else if(err != nil){
-			stdutil.PrintErr("", err);
-			return err;
+		for _ = range c {
+			err := session.UpdateStatus(0, statuses[rand.Intn(len(statuses))])
+			if err != nil {
+				stdutil.PrintErr("", err)
+				return
+			}
 		}
+	}()
+	fmt.Println("Started!")
 
-		buf := make([]byte, length);
-		err = binary.Read(f, binary.LittleEndian, &buf);
-		if(err != nil){
-			stdutil.PrintErr("", err);
-			return err;
-		}
+	interrupt := make(chan os.Signal, 2)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
-		*buffer = append(*buffer, buf);
-	}
-	return nil;
+	<-interrupt
+	fmt.Println("\nExiting")
+	session.Close()
 }
 
-func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s *Settings){
-	s.playing = true;
-	defer func(){ s.playing = false; }();
-	vc, err := session.ChannelVoiceJoin(guild, channel, false, true);
-	if(err != nil){
-		stdutil.PrintErr("", err);
-		return;
+func load(file string, buffer *[][]byte) error {
+	f, err := os.Open(filepath.Join(DIRNAME, file))
+	defer f.Close()
+	if err != nil {
+		stdutil.PrintErr("", err)
+		return err
 	}
 
-	err = vc.Speaking(true);
-	if(err != nil){
-		stdutil.PrintErr("", err);
+	var length int16
+	for {
+		err := binary.Read(f, binary.LittleEndian, &length)
 
-		err = vc.Disconnect();
-		if(err != nil){
-			stdutil.PrintErr("", err);
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			break
+		} else if err != nil {
+			stdutil.PrintErr("", err)
+			return err
 		}
-		return;
+
+		buf := make([]byte, length)
+		err = binary.Read(f, binary.LittleEndian, &buf)
+		if err != nil {
+			stdutil.PrintErr("", err)
+			return err
+		}
+
+		*buffer = append(*buffer, buf)
+	}
+	return nil
+}
+
+func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s *Settings) {
+	s.playing = true
+	defer func() { s.playing = false }()
+	vc, err := session.ChannelVoiceJoin(guild, channel, false, true)
+	if err != nil {
+		stdutil.PrintErr("", err)
+		return
+	}
+
+	err = vc.Speaking(true)
+	if err != nil {
+		stdutil.PrintErr("", err)
+
+		err = vc.Disconnect()
+		if err != nil {
+			stdutil.PrintErr("", err)
+		}
+		return
 	}
 
 	for _, buf := range buffer {
-		if(!s.playing){ break; }
-		vc.OpusSend <- buf;
+		if !s.playing {
+			break
+		}
+		vc.OpusSend <- buf
 	}
 
-	err = vc.Speaking(false);
-	if(err != nil){
-		stdutil.PrintErr("", err);
+	err = vc.Speaking(false)
+	if err != nil {
+		stdutil.PrintErr("", err)
 	}
-	err = vc.Disconnect();
-	if(err != nil){
-		stdutil.PrintErr("", err);
+	err = vc.Disconnect()
+	if err != nil {
+		stdutil.PrintErr("", err)
 	}
 }
 
-func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate){
+func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 	message(session, event.Message)
 }
-func messageUpdate(session *discordgo.Session, event *discordgo.MessageUpdate){
+func messageUpdate(session *discordgo.Session, event *discordgo.MessageUpdate) {
 	message(session, event.Message)
 }
-func message(session *discordgo.Session, event *discordgo.Message){
-	if(event.Author == nil){ return; }
-	msg := strings.ToLower(strings.TrimSpace(event.Content));
-	author := event.Author;
+func message(session *discordgo.Session, event *discordgo.Message) {
+	if event.Author == nil {
+		return
+	}
+	msg := strings.ToLower(strings.TrimSpace(event.Content))
+	author := event.Author
 
-	if(msg == ""){
-		return;
+	if msg == "" {
+		return
 	}
 
-	channel, err := session.Channel(event.ChannelID);
-	if(err != nil){ stdutil.PrintErr("", err); return; }
-
-	if(channel.IsPrivate){
-		return;
+	channel, err := session.Channel(event.ChannelID)
+	if err != nil {
+		stdutil.PrintErr("", err)
+		return
 	}
 
-	guild, err := session.Guild(channel.GuildID);
-	if(err != nil){ stdutil.PrintErr("", err); return; }
-
-	s := settings[guild.ID];
-	if(s == nil){
-		s = &Settings{};
-		settings[guild.ID] = s;
+	if channel.IsPrivate {
+		return
 	}
 
-	if(s.commander != "" && s.commander != author.ID){
-		return;
+	guild, err := session.Guild(channel.GuildID)
+	if err != nil {
+		stdutil.PrintErr("", err)
+		return
 	}
 
-	buffer, ok := sounds[msg];
-	if(ok){
-		if(!s.playing){
-			for _, state := range guild.VoiceStates{
-				if state.UserID == event.Author.ID{
-					go react(session, event);
-					play(buffer, session, guild.ID, state.ChannelID, s);
-					return;
+	s := settings[guild.ID]
+	if s == nil {
+		s = &Settings{}
+		settings[guild.ID] = s
+	}
+
+	if s.commander != "" && s.commander != author.ID {
+		return
+	}
+
+	buffer, ok := sounds[msg]
+	if ok {
+		if !s.playing {
+			for _, state := range guild.VoiceStates {
+				if state.UserID == event.Author.ID {
+					go react(session, event)
+					play(buffer, session, guild.ID, state.ChannelID, s)
+					return
 				}
 			}
 		}
-		return;
+		return
 	}
 
-	for _, image := range images{
-		contains, err := regexp.MatchString("(?i)\\b" + regexp.QuoteMeta(image.Keyword) + "\\b", msg);
-		if(err != nil){
-			stdutil.PrintErr("", err);
-			return;
+	for _, image := range images {
+		contains, err := regexp.MatchString("(?i)\\b"+regexp.QuoteMeta(image.Keyword)+"\\b", msg)
+		if err != nil {
+			stdutil.PrintErr("", err)
+			return
 		}
-		if(contains){
-			go react(session, event);
+		if contains {
+			go react(session, event)
 			_, err = session.ChannelMessageSendEmbed(event.ChannelID,
 				&discordgo.MessageEmbed{
 					Image: &discordgo.MessageEmbedImage{
 						URL: image.Image,
 					},
-				});
-			if(err != nil){
-				stdutil.PrintErr("", err);
+				})
+			if err != nil {
+				stdutil.PrintErr("", err)
 			}
-			return;
+			return
 		}
 	}
 
-	switch(msg){
-		case "thx":
-			s.playing = false;
-		case "listen only to me plz":
-			s.commander = author.ID;
-			fmt.Println("In guild '" + guild.Name + "', the user '" + author.Username + "' took control.");
-		case "every1 owns u stopad robot":
-			s.commander = "";
-		case "plz list da stuff":
-			strSounds := "";
-			for name := range sounds{
-				if(strSounds != ""){
-					strSounds += ", ";
-				}
-				strSounds += "`" + name + "`";
+	switch msg {
+	case "thx":
+		s.playing = false
+	case "listen only to me plz":
+		s.commander = author.ID
+		fmt.Println("In guild '" + guild.Name + "', the user '" + author.Username + "' took control.")
+	case "every1 owns u stopad robot":
+		s.commander = ""
+	case "plz list da stuff":
+		strSounds := ""
+		for name := range sounds {
+			if strSounds != "" {
+				strSounds += ", "
 			}
+			strSounds += "`" + name + "`"
+		}
 
-			strImages := "";
-			for _, image := range images{
-				if(strImages != ""){
-					strImages += ", ";
-				}
-				strImages += "`" + image.Keyword + "`";
+		strImages := ""
+		for _, image := range images {
+			if strImages != "" {
+				strImages += ", "
 			}
+			strImages += "`" + image.Keyword + "`"
+		}
 
-			_, err := session.ChannelMessageSendEmbed(event.ChannelID, &discordgo.MessageEmbed{
-				Fields: []*discordgo.MessageEmbedField{
-					&discordgo.MessageEmbedField{
-						Name: "DA SOUNDZ",
-						Value: strSounds,
-					},
-					&discordgo.MessageEmbedField{
-						Name: "DA IMAGEZ",
-						Value: strImages,
-						Inline: true,
-					},
+		_, err := session.ChannelMessageSendEmbed(event.ChannelID, &discordgo.MessageEmbed{
+			Fields: []*discordgo.MessageEmbedField{
+				&discordgo.MessageEmbedField{
+					Name:  "DA SOUNDZ",
+					Value: strSounds,
 				},
-			});
-			if(err != nil){
-				stdutil.PrintErr("", err);
-				return;
-			}
+				&discordgo.MessageEmbedField{
+					Name:   "DA IMAGEZ",
+					Value:  strImages,
+					Inline: true,
+				},
+			},
+		})
+		if err != nil {
+			stdutil.PrintErr("", err)
+			return
+		}
 	}
 }
 
-func react(session *discordgo.Session, event *discordgo.Message){
-	err := session.MessageReactionAdd(event.ChannelID, event.ID, "👌");
-	if(err != nil){
-		stdutil.PrintErr("", err);
-		return;
+func react(session *discordgo.Session, event *discordgo.Message) {
+	err := session.MessageReactionAdd(event.ChannelID, event.ID, "👌")
+	if err != nil {
+		stdutil.PrintErr("", err)
+		return
 	}
-	err = session.MessageReactionAdd(event.ChannelID, event.ID, "😂");
-	if(err != nil){
-		stdutil.PrintErr("", err);
+	err = session.MessageReactionAdd(event.ChannelID, event.ID, "😂")
+	if err != nil {
+		stdutil.PrintErr("", err)
 	}
 }
