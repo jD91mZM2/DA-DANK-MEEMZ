@@ -298,6 +298,7 @@ func message(session *discordgo.Session, event *discordgo.Message) {
 		fmt.Println("In guild '" + guild.Name + "', the user '" + author.Username + "' took control.")
 	case "every1 owns u stopad robot":
 		s.commander = ""
+		fmt.Println("In guild '" + guild.Name + "', the user '" + author.Username + "' returned the control to everyone.")
 	case "plz list da stuff":
 		strSounds := ""
 		for name := range sounds {
