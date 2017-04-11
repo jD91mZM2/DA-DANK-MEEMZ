@@ -251,8 +251,27 @@ func message(session *discordgo.Session, event *discordgo.Message) {
 		settings[guild.ID] = s
 	}
 
-	if s.commander != "" && s.commander != author.ID {
-		return
+	if msg == "meemz who ur master" {
+		msg := ""
+		if s.commander == "" {
+			msg = "nobody dos idiot"
+		} else if s.commander == author.ID {
+			msg = "u do... idiot"
+		} else {
+			msg = "dat wuld b <@" + s.commander + ">"
+		}
+		_, err = session.ChannelMessageSend(event.ChannelID, msg)
+		if err != nil {
+			stdutil.PrintErr("", err)
+		}
+	}
+
+	if guild.OwnerID == author.ID && strings.HasPrefix(msg, "meemz idfc ") {
+		msg = strings.TrimPrefix(msg, "meemz idfc ")
+	} else {
+		if s.commander != "" && s.commander != author.ID {
+			return
+		}
 	}
 
 	buffer, ok := sounds[msg]
