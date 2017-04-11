@@ -254,9 +254,9 @@ func message(session *discordgo.Session, event *discordgo.Message) {
 	if msg == "meemz who ur master" {
 		msg := ""
 		if s.commander == "" {
-			msg = "nobody dos idiot"
+			msg = "nobody is idiot"
 		} else if s.commander == author.ID {
-			msg = "u do... idiot"
+			msg = "u is... idiot"
 		} else {
 			msg = "dat wuld b <@" + s.commander + ">"
 		}
