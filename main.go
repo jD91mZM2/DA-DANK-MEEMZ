@@ -116,7 +116,6 @@ func main() {
 		return
 	}
 	session.AddHandler(messageCreate)
-	session.AddHandler(messageUpdate)
 	err = session.Open()
 
 	if err != nil {
@@ -214,12 +213,6 @@ func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s 
 }
 
 func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
-	message(session, event.Message)
-}
-func messageUpdate(session *discordgo.Session, event *discordgo.MessageUpdate) {
-	message(session, event.Message)
-}
-func message(session *discordgo.Session, event *discordgo.Message) {
 	if event.Author == nil {
 		return
 	}
@@ -282,7 +275,7 @@ func message(session *discordgo.Session, event *discordgo.Message) {
 		if !s.playing {
 			for _, state := range guild.VoiceStates {
 				if state.UserID == event.Author.ID {
-					go react(session, event)
+					go react(session, event.Message)
 					play(buffer, session, guild.ID, state.ChannelID, s)
 					return
 				}
@@ -298,7 +291,7 @@ func message(session *discordgo.Session, event *discordgo.Message) {
 			return
 		}
 		if contains {
-			go react(session, event)
+			go react(session, event.Message)
 			_, err = session.ChannelMessageSendEmbed(event.ChannelID,
 				&discordgo.MessageEmbed{
 					Image: &discordgo.MessageEmbedImage{
