@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/legolord208/stdutil"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -17,6 +15,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/legolord208/stdutil"
 )
 
 type Image struct {
@@ -257,6 +258,8 @@ func message(session *discordgo.Session, event *discordgo.Message) {
 			msg = "nobody is idiot"
 		} else if s.commander == author.ID {
 			msg = "u is... idiot"
+		} else if s.commander == "-" {
+			msg = "im no suppos 2 talk 2 u"
 		} else {
 			msg = "dat wuld b <@" + s.commander + ">"
 		}
@@ -315,6 +318,9 @@ func message(session *discordgo.Session, event *discordgo.Message) {
 	case "listen only to me plz":
 		s.commander = author.ID
 		fmt.Println("In guild '" + guild.Name + "', the user '" + author.Username + "' took control.")
+	case "meemz stfu":
+		s.commander = "-"
+		fmt.Println("In guild '" + guild.Name + "', the user '" + author.Username + "' disabled meemz.")
 	case "every1 owns u stopad robot":
 		s.commander = ""
 		fmt.Println("In guild '" + guild.Name + "', the user '" + author.Username + "' returned the control to everyone.")
