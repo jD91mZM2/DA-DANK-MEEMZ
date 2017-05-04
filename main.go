@@ -20,15 +20,15 @@ import (
 	"github.com/legolord208/stdutil"
 )
 
-type Image struct {
+type image struct {
 	Keyword string
-	Image   string
+	URL     string
 }
 
-const DIRNAME = "Dank"
+const dir = "Dank"
 
 var sounds = make(map[string][][]byte, 0)
-var images []*Image
+var images []*image
 
 var statuses = []string{
 	"hidden object games",
@@ -40,12 +40,12 @@ var statuses = []string{
 	"bored",
 	"dead"}
 
-type Settings struct {
+type settingsType struct {
 	playing   bool
 	commander string
 }
 
-var settings = make(map[string]*Settings)
+var settings = make(map[string]*settingsType)
 
 func main() {
 	//stdutil.ShouldTrace = true;
@@ -59,12 +59,12 @@ func main() {
 
 	fmt.Println("Loading...")
 
-	err := os.MkdirAll(DIRNAME, 0755)
-	if err != nil {
+	err := os.Mkdir(dir, 0755)
+	if err != nil && !os.IsExist(err) {
 		stdutil.PrintErr("", err)
 		return
 	}
-	files, err := ioutil.ReadDir(DIRNAME)
+	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		stdutil.PrintErr("", err)
 		return
@@ -96,9 +96,9 @@ func main() {
 		err = json.Unmarshal(data, &imagesMap)
 
 		for key, val := range imagesMap {
-			images = append(images, &Image{
+			images = append(images, &image{
 				Keyword: key,
-				Image:   val,
+				URL:     val,
 			})
 		}
 		sort.Slice(images, func(i, j int) bool {
@@ -145,7 +145,7 @@ func main() {
 }
 
 func load(file string, buffer *[][]byte) error {
-	f, err := os.Open(filepath.Join(DIRNAME, file))
+	f, err := os.Open(filepath.Join(dir, file))
 	defer f.Close()
 	if err != nil {
 		stdutil.PrintErr("", err)
@@ -175,7 +175,7 @@ func load(file string, buffer *[][]byte) error {
 	return nil
 }
 
-func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s *Settings) {
+func play(buffer [][]byte, session *discordgo.Session, guild, channel string, s *settingsType) {
 	s.playing = true
 	defer func() { s.playing = false }()
 	vc, err := session.ChannelVoiceJoin(guild, channel, false, true)
@@ -223,7 +223,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 		return
 	}
 
-	channel, err := session.Channel(event.ChannelID)
+	channel, err := session.State.Channel(event.ChannelID)
 	if err != nil {
 		stdutil.PrintErr("", err)
 		return
@@ -233,7 +233,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 		return
 	}
 
-	guild, err := session.Guild(channel.GuildID)
+	guild, err := session.State.Guild(channel.GuildID)
 	if err != nil {
 		stdutil.PrintErr("", err)
 		return
@@ -241,7 +241,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 
 	s := settings[guild.ID]
 	if s == nil {
-		s = &Settings{}
+		s = &settingsType{}
 		settings[guild.ID] = s
 	}
 
@@ -295,7 +295,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 			_, err = session.ChannelMessageSendEmbed(event.ChannelID,
 				&discordgo.MessageEmbed{
 					Image: &discordgo.MessageEmbedImage{
-						URL: image.Image,
+						URL: image.URL,
 					},
 				})
 			if err != nil {
