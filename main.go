@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bufio"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,8 +11,8 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -46,6 +46,7 @@ type settingsType struct {
 }
 
 var settings = make(map[string]*settingsType)
+var settingsMutex sync.RWMutex
 
 func main() {
 	//stdutil.ShouldTrace = true;
@@ -88,24 +89,29 @@ func main() {
 		sounds[name] = bytes
 	}
 
-	data, err := ioutil.ReadFile("Dank/images.json")
+	file, err := os.Open("Dank/images.json")
 	if err != nil {
 		stdutil.PrintErr("", err)
 	} else {
-		var imagesMap map[string]string
-		err = json.Unmarshal(data, &imagesMap)
+		reader := bufio.NewScanner(file)
+		for reader.Scan() {
+			parts := strings.SplitN(reader.Text(), ", ", 2)
+			if len(parts) != 2 {
+				stdutil.PrintErr("Corrupt file or something", nil)
+				continue
+			}
 
-		for key, val := range imagesMap {
 			images = append(images, &image{
-				Keyword: key,
-				URL:     val,
+				Keyword: parts[0],
+				URL:     parts[1],
 			})
 		}
-		sort.Slice(images, func(i, j int) bool {
-			return len(images[i].Keyword) > len(images[j].Keyword)
-		})
-		if err != nil {
-			stdutil.PrintErr("", err)
+
+		file.Close()
+
+		if err := reader.Err(); err != nil {
+			stdutil.PrintErr("Error reading file", err)
+			return
 		}
 	}
 
@@ -239,10 +245,16 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 		return
 	}
 
+	settingsMutex.RLock()
 	s := settings[guild.ID]
+	settingsMutex.RUnlock()
+
 	if s == nil {
 		s = &settingsType{}
+
+		settingsMutex.Lock()
 		settings[guild.ID] = s
+		settingsMutex.Unlock()
 	}
 
 	if msg == "meemz who ur master" {
