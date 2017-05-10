@@ -130,7 +130,7 @@ func main() {
 	}
 
 	go func() {
-		c := time.Tick(time.Second * 5)
+		c := time.Tick(time.Minute * 5)
 
 		for _ = range c {
 			err := session.UpdateStatus(0, statuses[rand.Intn(len(statuses))])
