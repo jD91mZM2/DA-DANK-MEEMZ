@@ -89,7 +89,7 @@ func main() {
 		sounds[name] = bytes
 	}
 
-	file, err := os.Open("Dank/images.json")
+	file, err := os.Open("Dank/images.txt")
 	if err != nil {
 		stdutil.PrintErr("", err)
 	} else {
@@ -297,7 +297,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 	}
 
 	for _, image := range images {
-		contains, err := regexp.MatchString("(?i)\\b"+regexp.QuoteMeta(image.Keyword)+"\\b", msg)
+		contains, err := regexp.MatchString(`(^|[^:])\b`+regexp.QuoteMeta(image.Keyword)+`\b($|[^:])`, msg)
 		if err != nil {
 			stdutil.PrintErr("", err)
 			return
