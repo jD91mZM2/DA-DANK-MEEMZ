@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"syscall"
@@ -113,6 +114,10 @@ func main() {
 			stdutil.PrintErr("Error reading file", err)
 			return
 		}
+
+		sort.Slice(images, func(i int, i2 int) bool {
+			return len(images[i].Keyword) > len(images[i2].Keyword)
+		})
 	}
 
 	fmt.Println("Starting...")
