@@ -96,7 +96,11 @@ func main() {
 	} else {
 		reader := bufio.NewScanner(file)
 		for reader.Scan() {
-			parts := strings.SplitN(reader.Text(), ", ", 2)
+			text := reader.Text()
+			if text == "" {
+				continue
+			}
+			parts := strings.SplitN(text, ", ", 2)
 			if len(parts) != 2 {
 				stdutil.PrintErr("Corrupt file or something", nil)
 				continue
