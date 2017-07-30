@@ -244,7 +244,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 		return
 	}
 
-	if channel.IsPrivate {
+	if channel.Type != discordgo.ChannelTypeGuildText {
 		return
 	}
 
