@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -306,12 +305,7 @@ func messageCreate(session *discordgo.Session, event *discordgo.MessageCreate) {
 	}
 
 	for _, image := range images {
-		contains, err := regexp.MatchString(`(^|[^:])\b`+regexp.QuoteMeta(image.Keyword)+`\b($|[^:])`, msg)
-		if err != nil {
-			stdutil.PrintErr("", err)
-			return
-		}
-		if contains {
+		if msg == image.Keyword {
 			go react(session, event.Message)
 			_, err = session.ChannelMessageSendEmbed(event.ChannelID,
 				&discordgo.MessageEmbed{
